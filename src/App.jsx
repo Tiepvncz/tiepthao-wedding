@@ -90,7 +90,7 @@ const FAQ_DATA = [
   },
   {
     q: 'Do you have a gift registry?',
-    a: 'Your presence is the greatest gift. If you wish to honour us with a gift, we would appreciate contributions to our honeymoon fund via bank transfer.\n\nEUR Account:\nBeneficiary: Viet Tiep Nguyen\nIBAN: LT03 3250 0323 9669 0806\nBIC/SWIFT: REVOLT21\nBank: Revolut Bank UAB\n\nCZK Account:\nBeneficiary: Viet Tiep Nguyen\nIBAN: CZ45 3030 0000 0015 7387 0067\nBIC/SWIFT: AIRACZPP\nAccount: 1573870067/3030',
+    a: 'Your presence is the greatest gift. If you wish to honour us with a gift, we would appreciate contributions to our dream home fund via bank transfer.\n\nEUR Account:\nBeneficiary: Viet Tiep Nguyen\nIBAN: LT03 3250 0323 9669 0806\nBIC/SWIFT: REVOLT21\nBank: Revolut Bank UAB\n\nCZK Account:\nBeneficiary: Viet Tiep Nguyen\nIBAN: CZ45 3030 0000 0015 7387 0067\nBIC/SWIFT: AIRACZPP\nAccount: 1573870067/3030',
   },
   {
     q: 'When is the RSVP deadline?',
