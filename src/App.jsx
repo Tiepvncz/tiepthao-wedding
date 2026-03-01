@@ -89,6 +89,10 @@ const FAQ_DATA = [
     a: 'The venue is about 1 hour from Prague by car. Detailed directions and transport options will be shared closer to the date. Parking is available on-site.',
   },
   {
+    q: 'Do you have a gift registry?',
+    a: 'Your presence is the greatest gift. If you wish to honour us with a gift, we would appreciate contributions to our honeymoon fund via bank transfer.\n\nEUR Account:\nBeneficiary: Viet Tiep Nguyen\nIBAN: LT03 3250 0323 9669 0806\nBIC/SWIFT: REVOLT21\nBank: Revolut Bank UAB\n\nCZK Account:\nBeneficiary: Viet Tiep Nguyen\nIBAN: CZ45 3030 0000 0015 7387 0067\nBIC/SWIFT: AIRACZPP\nAccount: 1573870067/3030',
+  },
+  {
     q: 'When is the RSVP deadline?',
     a: 'Please respond by March 31, 2026 so we can make everything perfect.',
   },
@@ -450,7 +454,7 @@ function FaqSection() {
                   <span className="faq__icon">+</span>
                 </button>
                 <div className="faq__answer">
-                  <div className="faq__answer-text">{item.a}</div>
+                  <div className="faq__answer-text" style={{whiteSpace: 'pre-line'}}>{item.a}</div>
                 </div>
               </div>
             ))}
