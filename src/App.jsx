@@ -367,7 +367,7 @@ function DetailsSection() {
               <div className="detail-card-refined__label">Dress Code</div>
               <h3 className="detail-card-refined__title">Formal Attire</h3>
               <p className="detail-card-refined__text">
-                Gentlemen, think tuxedos or dark suits. Ladies, elegant gowns or cocktail dresses. The ceremony takes place on grass, so please choose your footwear accordingly.
+                Gentlemen, think tuxedos or black suits. Ladies, elegant gowns or cocktail dresses. The ceremony takes place on grass, so please choose your footwear accordingly.
               </p>
             </div>
           </Reveal>
