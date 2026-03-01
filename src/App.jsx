@@ -224,10 +224,9 @@ function HeroSection() {
             <div className="countdown__label">Seconds</div>
           </div>
         </div>
-        <a
 <div className="hero__buttons">
           
-            className="btn btn--light"
+           <a className="btn btn--light"
             href="https://tally.so/r/0QEor0"
             target="_blank"
             rel="noopener noreferrer"
@@ -235,7 +234,7 @@ function HeroSection() {
             RSVP
           </a>
           
-            className="btn btn--light"
+            <a className="btn btn--light"
             href="/wedding.ics"
             download="TiepThao-Wedding.ics"
           >
