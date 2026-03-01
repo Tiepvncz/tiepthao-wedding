@@ -94,7 +94,7 @@ const FAQ_DATA = [
   },
   {
     q: 'When is the RSVP deadline?',
-    a: 'Please respond by June 15, 2026 so we can make everything perfect.',
+    a: 'Please respond by March 31, 2026 so we can make everything perfect.',
   },
 ]
 
@@ -398,7 +398,7 @@ function RsvpSection() {
           <div className="section-label text-center" style={{ color: 'var(--gold-light)' }}>Respond</div>
           <h2 className="section-title text-center" style={{ color: 'var(--white)' }}>RSVP</h2>
           <p className="section-subtitle text-center mx-auto" style={{ color: 'rgba(255,255,255,0.65)', marginBottom: '3rem' }}>
-            We would love to have you celebrate with us. Each guest should respond individually. Please let us know by June 15, 2026.
+            We would love to have you celebrate with us. Each guest should respond individually. Please let us know by March 31, 2026.
           </p>
         </Reveal>
 
