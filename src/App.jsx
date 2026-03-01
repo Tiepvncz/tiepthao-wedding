@@ -89,10 +89,6 @@ const FAQ_DATA = [
     a: 'The venue is about 1 hour from Prague by car. Detailed directions and transport options will be shared closer to the date. Parking is available on-site.',
   },
   {
-    q: 'Can I take photos during the ceremony?',
-    a: 'We kindly ask for an unplugged ceremony. Please put phones away during the vows. Our photographers will capture everything. Photos are welcome during the rest of the celebration!',
-  },
-  {
     q: 'When is the RSVP deadline?',
     a: 'Please respond by March 31, 2026 so we can make everything perfect.',
   },
@@ -313,10 +309,10 @@ function ScheduleSection() {
         <Reveal>
           <div className="schedule__coming-soon">
             <div className="schedule__coming-soon-card">
-              <h3 className="schedule__coming-soon-dates">July 31 & August 1, 2026</h3>
+              <h3 className="schedule__coming-soon-dates">August 1, 2026</h3>
               <div className="schedule__coming-soon-divider" />
               <p className="schedule__coming-soon-text">
-                We are planning a full weekend of celebration, starting with a casual Friday evening and continuing with the wedding on Saturday.
+                Join us for our wedding celebration on Saturday, August 1, 2026 at Zamek Bon Repos. Guests are welcome to stay overnight from Saturday to Sunday.
               </p>
               <p className="schedule__coming-soon-note">
                 The detailed schedule will be shared closer to the date. Stay tuned!
