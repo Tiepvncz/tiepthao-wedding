@@ -225,13 +225,23 @@ function HeroSection() {
           </div>
         </div>
         <a
-          className="btn btn--light"
-          href="https://tally.so/r/0QEor0"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          RSVP
-        </a>
+<div className="hero__buttons">
+          
+            className="btn btn--light"
+            href="https://tally.so/r/0QEor0"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            RSVP
+          </a>
+          
+            className="btn btn--light"
+            href="/wedding.ics"
+            download="TiepThao-Wedding.ics"
+          >
+            Save the Date
+          </a>
+        </div>
       </div>
       <div className="hero__scroll">
         <div className="hero__scroll-line" />
