@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react'
-import albumPhotos from './albumPhotos'
+import React, { useState, useEffect, useRef, useMemo, useCallback, createContext, useContext } from 'react'
+import galleryPhotos from './galleryPhotos'
 
 /* ============================================
    SCROLL REVEAL HOOK
@@ -38,13 +38,37 @@ function Reveal({ children, className = '', delay = 0 }) {
    SHARED CONSTANTS
    ============================================ */
 const GOOGLE_PHOTOS_URL = 'https://photos.app.goo.gl/YDqyMdkuqvfhKx4u8'
+const FULL_GALLERY_URL = 'https://kovachstudio.gallery.photo/gallery/wedding-bszxc5/'
 
-const NAV_ORDER = ['thankYou', 'photos', 'story', 'gifts']
+/* ---- Gallery image source ----
+   Photos are hotlinked from the photographer's CDN by default. A full backup
+   copy also lives in /public/gallery (thumb <i>_t.jpg, full <i>.jpg), so:
+   - Each <img> auto-falls back to its stored copy if the hotlink fails.
+   - Flip GALLERY_SOURCE to 'local' to force every photo to serve from Vercel
+     (e.g. if the photographer's gallery ever goes offline for good). */
+const GALLERY_SOURCE = 'hotlink' // 'hotlink' | 'local'
+const pad = (i) => String(i).padStart(4, '0')
+const localThumb = (i) => `/gallery/${pad(i)}_t.jpg`
+const localFull = (i) => `/gallery/${pad(i)}.jpg`
+const hotThumb = (url) => `${url}=w600`
+const hotFull = (url) => `${url}=w1600`
+const thumbSrc = (p) => (GALLERY_SOURCE === 'local' ? localThumb(p.i) : hotThumb(p.url))
+const thumbAlt = (p) => (GALLERY_SOURCE === 'local' ? hotThumb(p.url) : localThumb(p.i))
+const fullSrc = (p) => (GALLERY_SOURCE === 'local' ? localFull(p.i) : hotFull(p.url))
+const fullAlt = (p) => (GALLERY_SOURCE === 'local' ? hotFull(p.url) : localFull(p.i))
+// Swap an <img> to its backup source once, on load error (no infinite loop).
+const onImgError = (fallback) => (e) => {
+  const img = e.currentTarget
+  if (img.dataset.fellBack || !fallback) return
+  img.dataset.fellBack = '1'
+  img.src = fallback
+}
+
+const NAV_ORDER = ['thankYou', 'photos', 'story']
 const SECTION_IDS = {
   thankYou: 'thank-you',
   photos: 'photos',
   story: 'story',
-  gifts: 'gifts',
 }
 
 /* ============================================
@@ -56,7 +80,6 @@ const TRANSLATIONS = {
       thankYou: 'Thank You',
       photos: 'Photos',
       story: 'Our Story',
-      gifts: 'Registry',
     },
     hero: {
       eyebrow: "We're Married",
@@ -71,8 +94,10 @@ const TRANSLATIONS = {
     photos: {
       label: 'Share the Memories',
       title: 'Wedding Photos',
-      text: "Relive the weekend through everyone's eyes - and add your own photos and videos before we all slip back into everyday routine. The album is open for all of us to enjoy and contribute to.",
-      button: 'Add & View Photos',
+      text: "Relive the day through our photographer's eyes. Browse the full collection below - and add your own photos and videos to our shared album before we all slip back into everyday routine.",
+      fullGallery: 'View Full Gallery',
+      button: 'Add & View Your Photos',
+      loadMore: 'Load More Photos',
     },
     story: {
       label: 'Our Story',
@@ -87,21 +112,6 @@ const TRANSLATIONS = {
       ],
       closing: 'August 1, 2026 · Bon Repos, Czech Republic',
     },
-    gifts: {
-      label: 'With Thanks',
-      title: 'Gift Registry',
-      intro: 'Your presence was the greatest gift of all. If you would still like to honour us, we would be grateful for a contribution to our dream-home fund.',
-      accounts: [
-        {
-          label: 'EUR Account',
-          lines: ['Viet Tiep Nguyen', 'IBAN: LT03 3250 0323 9669 0806', 'BIC/SWIFT: REVOLT21', 'Revolut Bank UAB'],
-        },
-        {
-          label: 'CZK Account',
-          lines: ['Viet Tiep Nguyen', 'IBAN: CZ45 3030 0000 0015 7387 0067', 'BIC/SWIFT: AIRACZPP', 'Account: 1573870067/3030'],
-        },
-      ],
-    },
     footer: {
       date: 'August 1, 2026',
     },
@@ -112,7 +122,6 @@ const TRANSLATIONS = {
       thankYou: 'Cảm Ơn',
       photos: 'Hình Ảnh',
       story: 'Chuyện Tình',
-      gifts: 'Quà Tặng',
     },
     hero: {
       eyebrow: 'Chúng Tôi Đã Cưới',
@@ -127,8 +136,10 @@ const TRANSLATIONS = {
     photos: {
       label: 'Lưu Giữ Kỷ Niệm',
       title: 'Hình Ảnh Đám Cưới',
-      text: 'Cùng sống lại những khoảnh khắc của ngày cưới qua góc nhìn của mọi người - và hãy thêm những bức ảnh, video của riêng bạn trước khi tất cả chúng ta trở lại nhịp sống thường ngày. Album được mở để mọi người cùng xem và đóng góp.',
-      button: 'Thêm & Xem Ảnh',
+      text: 'Cùng sống lại ngày cưới qua ống kính của nhiếp ảnh gia. Xem trọn bộ ảnh bên dưới - và hãy thêm những bức ảnh, video của riêng bạn vào album chung trước khi tất cả chúng ta trở lại nhịp sống thường ngày.',
+      fullGallery: 'Xem Toàn Bộ Album',
+      button: 'Thêm & Xem Ảnh Của Bạn',
+      loadMore: 'Xem Thêm Ảnh',
     },
     story: {
       label: 'Chuyện Tình Yêu',
@@ -142,21 +153,6 @@ const TRANSLATIONS = {
         'Giờ đây, sau sáu năm, ba quốc gia, vô số dặm đường và một lời cầu hôn rất "công khai" trên đỉnh núi, họ đã là vợ chồng. Và lần này, không còn khoảng cách nào nữa. Chỉ có những người thân yêu nhất của họ, cùng quây quần ở một nơi.',
       ],
       closing: 'Ngày 1 tháng 8, 2026 · Bon Repos, Cộng hòa Séc',
-    },
-    gifts: {
-      label: 'Lời Cảm Ơn',
-      title: 'Quà Mừng Cưới',
-      intro: 'Sự hiện diện của quý vị là món quà quý giá nhất. Nếu quý vị vẫn muốn gửi tặng, chúng tôi xin trân trọng đón nhận đóng góp cho quỹ xây tổ ấm của chúng tôi.',
-      accounts: [
-        {
-          label: 'Tài khoản EUR',
-          lines: ['Người nhận: Viet Tiep Nguyen', 'IBAN: LT03 3250 0323 9669 0806', 'BIC/SWIFT: REVOLT21', 'Revolut Bank UAB'],
-        },
-        {
-          label: 'Tài khoản CZK',
-          lines: ['Người nhận: Viet Tiep Nguyen', 'IBAN: CZ45 3030 0000 0015 7387 0067', 'BIC/SWIFT: AIRACZPP', 'Số tài khoản: 1573870067/3030'],
-        },
-      ],
     },
     footer: {
       date: 'Ngày 1 tháng 8, 2026',
@@ -295,9 +291,6 @@ export default function App() {
       {/* OUR STORY */}
       <StorySection />
 
-      {/* GIFT REGISTRY */}
-      <GiftsSection />
-
       {/* FOOTER */}
       <footer className="footer">
         <div className="container">
@@ -359,58 +352,144 @@ function ThankYouSection() {
 }
 
 /* ============================================
-   PHOTO SLIDESHOW
-   Self-hosted crossfade slideshow of the wedding album.
-   Photo URLs are a snapshot from the Google Photos album
-   (see src/albumPhotos.js); regenerate when many new photos
-   are added, since Google Photos has no live embed API.
-   Only a small window around the active slide is loaded.
+   PHOTO GALLERY + LIGHTBOX
+   A randomized, lazy-loaded grid of the professional wedding
+   photos (see src/galleryPhotos.js - a snapshot of the
+   photographer's gallery). Thumbnails load only as they scroll
+   into view; clicking one opens a full-screen lightbox with
+   keyboard / swipe navigation through the whole shuffled set.
    ============================================ */
-function PhotoSlideshow() {
-  const photos = albumPhotos
-  const n = photos.length
-  const [idx, setIdx] = useState(0)
-  const [paused, setPaused] = useState(false)
 
-  useEffect(() => {
-    if (paused || n <= 1) return
-    const timer = setInterval(() => setIdx((i) => (i + 1) % n), 4500)
-    return () => clearInterval(timer)
-  }, [paused, n])
-
-  const go = (d) => setIdx((i) => (i + d + n) % n)
-
-  // Only assign src to the active slide and its immediate neighbours,
-  // so the browser never fetches all photos at once.
-  const nearActive = (i) => {
-    const forward = (i - idx + n) % n
-    const backward = (idx - i + n) % n
-    return Math.min(forward, backward) <= 1
+// Fisher-Yates shuffle (returns a new array).
+function shuffle(arr) {
+  const a = arr.slice()
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
   }
+  return a
+}
+
+const GALLERY_BATCH = 200
+
+function Lightbox({ photos, index, onClose, onNav }) {
+  const n = photos.length
+
+  // Keyboard navigation + body scroll lock while open.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose()
+      else if (e.key === 'ArrowRight') onNav(1)
+      else if (e.key === 'ArrowLeft') onNav(-1)
+    }
+    window.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [onClose, onNav])
+
+  // Touch swipe.
+  const touchX = useRef(null)
+  const onTouchStart = (e) => { touchX.current = e.touches[0].clientX }
+  const onTouchEnd = (e) => {
+    if (touchX.current == null) return
+    const dx = e.changedTouches[0].clientX - touchX.current
+    if (Math.abs(dx) > 50) onNav(dx < 0 ? 1 : -1)
+    touchX.current = null
+  }
+
+  return (
+    <div className="lightbox" onClick={onClose}>
+      <button className="lightbox__close" onClick={onClose} aria-label="Close">✕</button>
+      <button
+        className="lightbox__nav lightbox__nav--prev"
+        onClick={(e) => { e.stopPropagation(); onNav(-1) }}
+        aria-label="Previous photo"
+      >‹</button>
+      <div
+        className="lightbox__stage"
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <img
+          key={photos[index].i}
+          className="lightbox__img"
+          src={fullSrc(photos[index])}
+          onError={onImgError(fullAlt(photos[index]))}
+          alt=""
+          draggable="false"
+        />
+      </div>
+      <button
+        className="lightbox__nav lightbox__nav--next"
+        onClick={(e) => { e.stopPropagation(); onNav(1) }}
+        aria-label="Next photo"
+      >›</button>
+      <div className="lightbox__counter">{index + 1} / {n}</div>
+    </div>
+  )
+}
+
+function PhotoGallery() {
+  const { t } = useLang()
+  // Shuffle once per visit so the order is random each time. Each entry keeps
+  // its original index (i) so it can map to its stored backup file.
+  const photos = useMemo(() => shuffle(galleryPhotos.map((url, i) => ({ url, i }))), [])
+  const n = photos.length
+  const [visible, setVisible] = useState(GALLERY_BATCH)
+  const [lightbox, setLightbox] = useState(null) // active index or null
+
+  const nav = useCallback((d) => {
+    setLightbox((i) => (i == null ? i : (i + d + n) % n))
+  }, [n])
 
   if (!n) return null
 
   return (
-    <div
-      className="slideshow"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      <div className="slideshow__frame">
-        {photos.map((url, i) => (
-          <img
-            key={i}
-            className={`slideshow__img ${i === idx ? 'is-active' : ''}`}
-            src={nearActive(i) ? `${url}=w1600` : undefined}
-            alt=""
-            draggable="false"
-          />
+    <>
+      <div className="gallery">
+        {photos.slice(0, visible).map((p, i) => (
+          <button
+            key={p.i}
+            className="gallery__item"
+            onClick={() => setLightbox(i)}
+            aria-label={`Open photo ${i + 1}`}
+          >
+            <img
+              className="gallery__img"
+              src={thumbSrc(p)}
+              onError={onImgError(thumbAlt(p))}
+              alt=""
+              loading="lazy"
+              draggable="false"
+            />
+          </button>
         ))}
-        <button className="slideshow__nav slideshow__nav--prev" onClick={() => go(-1)} aria-label="Previous photo">‹</button>
-        <button className="slideshow__nav slideshow__nav--next" onClick={() => go(1)} aria-label="Next photo">›</button>
-        <div className="slideshow__counter">{idx + 1} / {n}</div>
       </div>
-    </div>
+      {visible < n && (
+        <div className="gallery__more text-center">
+          <div className="gallery__count">{visible} / {n}</div>
+          <button
+            className="btn btn--large"
+            onClick={() => setVisible((v) => Math.min(v + GALLERY_BATCH, n))}
+          >
+            {t.photos.loadMore}
+          </button>
+        </div>
+      )}
+      {lightbox != null && (
+        <Lightbox
+          photos={photos}
+          index={lightbox}
+          onClose={() => setLightbox(null)}
+          onNav={nav}
+        />
+      )}
+    </>
   )
 }
 
@@ -430,13 +509,14 @@ function PhotosSection() {
           </div>
         </Reveal>
 
-        <Reveal>
-          <PhotoSlideshow />
-        </Reveal>
+        <PhotoGallery />
 
         <Reveal>
           <div className="photos__cta text-center">
-            <a className="btn btn--large" href={GOOGLE_PHOTOS_URL} target="_blank" rel="noopener noreferrer">
+            <a className="btn btn--large" href={FULL_GALLERY_URL} target="_blank" rel="noopener noreferrer">
+              {t.photos.fullGallery}
+            </a>
+            <a className="btn btn--large btn--outline" href={GOOGLE_PHOTOS_URL} target="_blank" rel="noopener noreferrer">
               {t.photos.button}
             </a>
           </div>
@@ -482,35 +562,3 @@ function StorySection() {
   )
 }
 
-/* ============================================
-   GIFT REGISTRY
-   ============================================ */
-function GiftsSection() {
-  const { t } = useLang()
-  return (
-    <section id="gifts" className="section">
-      <div className="container">
-        <Reveal>
-          <div className="text-center">
-            <div className="section-label">{t.gifts.label}</div>
-            <h2 className="section-title">{t.gifts.title}</h2>
-            <p className="section-subtitle text-center mx-auto">{t.gifts.intro}</p>
-          </div>
-        </Reveal>
-
-        <div className="details__grid-refined details__grid-refined--two">
-          {t.gifts.accounts.map((acc, i) => (
-            <Reveal delay={i + 1} key={i}>
-              <div className="detail-card-refined">
-                <div className="detail-card-refined__label">{acc.label}</div>
-                <p className="detail-card-refined__text" style={{ whiteSpace: 'pre-line' }}>
-                  {acc.lines.join('\n')}
-                </p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
